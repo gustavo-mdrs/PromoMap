@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
@@ -42,6 +43,22 @@ android {
 }
 
 dependencies {
+    //coil
+    implementation("io.coil-kt:coil-compose:2.7.0")
+    // Google maps
+    implementation("com.google.android.gms:play-services-maps:19.2.0")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+    // Google maps for compose
+    implementation("com.google.maps.android:maps-compose:2.8.0")
+    implementation("androidx.navigation:navigation-compose:2.9.5")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4")
+    //Retrofit
+    implementation ("com.squareup.retrofit2:retrofit:3.0.0")
+    implementation ("com.squareup.retrofit2:converter-gson:3.0.0")
+
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4")
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -50,6 +67,9 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.auth)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

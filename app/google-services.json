@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "218780731239",
+    "project_id": "promomap-4df95",
+    "storage_bucket": "promomap-4df95.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:218780731239:android:14ce76ab55233130df51c2",
+        "android_client_info": {
+          "package_name": "com.example.promomap"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCZeI_g8nMV2UZCDLtTLy6ljgN0wlqACek"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
