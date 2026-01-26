@@ -4,7 +4,7 @@ import android.app.Activity
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.LocalActivity
+import androidx.compose.ui.platform.LocalContext
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
@@ -47,7 +47,7 @@ fun RegisterPage(modifier: Modifier = Modifier) {
     var password by rememberSaveable { mutableStateOf("") }
     var passwordConfirm by rememberSaveable { mutableStateOf("") }
 
-    val activity = LocalActivity.current as Activity
+    val activity = LocalContext.current as Activity
 
     Column(
         modifier = modifier.padding(16.dp).fillMaxSize(),

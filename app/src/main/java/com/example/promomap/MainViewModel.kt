@@ -10,10 +10,15 @@ import com.example.promomap.db.fb.FBUser
 import com.example.promomap.db.fb.toFBPromo
 import com.example.promomap.model.Promo
 import com.example.promomap.model.User
+import com.example.promomap.ui.theme.nav.Route
 
 // Removido WeatherService pois o foco é Promoção, não Clima
 class MainViewModel(private val db: FBDatabase) : ViewModel(), FBDatabase.Listener {
 
+    private var _page = mutableStateOf<Route>(Route.Home)
+    var page: Route
+        get() = _page.value
+        set(tmp) { _page.value = tmp }
     // Lista de promoções observável pela UI (Mapa e Lista)
     private val _promos = mutableStateMapOf<String, Promo>()
     val promos: List<Promo>
