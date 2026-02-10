@@ -8,5 +8,5 @@ data class Promo(
     val marca: String,
     val preco: Double,
     val localizacao: LatLng? = null,
-    val status: String = "Ativa" // "Ativa" ou "Acabou" conforme slide 10
+    val status: String = "Ativa"
 )

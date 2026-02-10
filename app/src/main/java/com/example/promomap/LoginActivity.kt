@@ -67,23 +67,13 @@ fun LoginPage(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Certifique-se de ter uma imagem chamada "logo" na pasta res/drawable
-        // Se não tiver, comente a linha do Image abaixo para testar
+
         Image(
             painter = painterResource(id = R.drawable.logo),
             contentDescription = "Logo do PromoMap"
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = "PromoMap",
-            fontSize = 32.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
         // Campo de Email
         OutlinedTextField(

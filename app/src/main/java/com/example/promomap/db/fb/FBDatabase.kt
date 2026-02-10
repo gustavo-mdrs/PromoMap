@@ -1,77 +1,73 @@
 package com.example.promomap.db.fb
 
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
-import com.google.firebase.firestore.DocumentChange
-import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.firestore.firestore
+import com.example.promomap.model.Promo
+import com.example.promomap.model.User
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
 
 class FBDatabase {
-    interface Listener {
-        fun onUserLoaded(user: FBUser)
-        fun onUserSignOut()
-        fun onPromoAdded(promo: FBPromo)    // Alterado de City para Promo
-        fun onPromoUpdated(promo: FBPromo)  // Alterado de City para Promo
-        fun onPromoRemoved(promo: FBPromo)  // Alterado de City para Promo
-    }
-
     private val auth = Firebase.auth
     private val db = Firebase.firestore
-    private var promoListReg: ListenerRegistration? = null // Escuta de promoções
-    private var listener : Listener? = null
 
-    init {
-        auth.addAuthStateListener { auth ->
-            if (auth.currentUser == null) {
-                promoListReg?.remove()
-                listener?.onUserSignOut()
-                return@addAuthStateListener
+    // Retorna o usuário atual
+    fun getCurrentUser(): User? {
+        val fbUser = auth.currentUser
+        // Nota: Para simplificar, retornamos um User básico.
+        // Se precisar do CPF, teria que buscar no Firestore, mas para Auth basta isso por enquanto.
+        return if (fbUser != null) User(fbUser.displayName ?: "", "", fbUser.email ?: "") else null
+    }
+
+    // --- O GRANDE TRUNFO: FLOW EM VEZ DE LISTENER ---
+    // Essa função cria um "canal" de dados em tempo real
+    fun getPromos(): Flow<List<Promo>> = callbackFlow {
+        // Referência à coleção
+        val collection = db.collection("promocoes")
+
+        // Adiciona o ouvinte do Firestore
+        val listener = collection.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                close(error) // Fecha o canal se der erro
+                return@addSnapshotListener
             }
 
-            // Carrega dados do perfil (Nome, CPF)
-            val refCurrUser = db.collection("users").document(auth.currentUser!!.uid)
-            refCurrUser.get().addOnSuccessListener {
-                it.toObject(FBUser::class.java)?.let { user ->
-                    listener?.onUserLoaded(user)
+            if (snapshot != null) {
+                // Converte cada documento do Firebase (FBPromo) para nosso modelo (Promo)
+                val promos = snapshot.documents.mapNotNull { doc ->
+                    val fbPromo = doc.toObject(FBPromo::class.java)
+                    fbPromo?.id = doc.id // Garante que o ID do doc está no objeto
+                    fbPromo?.toPromo()
                 }
+                // "Emite" a lista nova para o app
+                trySend(promos)
             }
+        }
 
-            // Monitora a coleção GLOBAL de promoções (para todos verem no mapa)
-            promoListReg = db.collection("promocoes")
-                .addSnapshotListener { snapshots, ex ->
-                    if (ex != null) return@addSnapshotListener
-                    snapshots?.documentChanges?.forEach { change ->
-                        val fbPromo = change.document.toObject(FBPromo::class.java)
-                        when (change.type) {
-                            DocumentChange.Type.ADDED -> listener?.onPromoAdded(fbPromo)
-                            DocumentChange.Type.MODIFIED -> listener?.onPromoUpdated(fbPromo)
-                            DocumentChange.Type.REMOVED -> listener?.onPromoRemoved(fbPromo)
-                        }
-                    }
-                }
+        // Quando a tela fecha ou o ViewModel morre, isso remove o listener do Firebase para economizar bateria
+        awaitClose { listener.remove() }
+    }
+
+    // Funções Suspend (Rodam em Background)
+    suspend fun addPromo(promo: FBPromo) {
+        // Se não tiver ID, deixa o Firestore gerar
+        if (promo.id.isNullOrEmpty()) {
+            db.collection("promocoes").add(promo).await()
+        } else {
+            db.collection("promocoes").document(promo.id!!).set(promo).await()
         }
     }
 
-    fun setListener(listener: Listener? = null) {
-        this.listener = listener
+    suspend fun removePromo(promoId: String) {
+        db.collection("promocoes").document(promoId).delete().await()
     }
 
-    // Registra o perfil do usuário no Firestore (Slide 6)
+    // Mantivemos o register igual, pois é uma ação única
     fun register(user: FBUser) {
-        val uid = auth.currentUser?.uid ?: throw RuntimeException("User not logged in!")
+        val uid = auth.currentUser?.uid ?: return
         db.collection("users").document(uid).set(user)
-    }
-
-    // Adiciona uma nova promoção ao sistema (Slide 8)
-    fun addPromo(promo: FBPromo) {
-        if (auth.currentUser == null) throw RuntimeException("User not logged in!")
-        // Usa o nome do item como ID do documento ou um ID gerado automaticamente
-        db.collection("promocoes").document(promo.id ?: promo.item!!).set(promo)
-    }
-
-    // Remove ou encerra uma promoção (Slide 10)
-    fun removePromo(promo: FBPromo) {
-        if (auth.currentUser == null) throw RuntimeException("User not logged in!")
-        db.collection("promocoes").document(promo.id ?: promo.item!!).delete()
     }
 }

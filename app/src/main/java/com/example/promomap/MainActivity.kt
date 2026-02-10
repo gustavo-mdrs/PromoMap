@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import com.example.promomap.db.fb.FBDatabase
+import com.example.promomap.repo.PromoRepository
 import com.example.promomap.ui.theme.PromoMapTheme
 import com.example.promomap.ui.theme.nav.MainNavHost
 
@@ -26,12 +27,15 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            // 1. Inicialização do Banco e ViewModel
+            // 1. Cria o Banco de Dados
             val fbDB = remember { FBDatabase() }
 
-            // Usando a Factory para injetar o Banco no ViewModel
+            // 2. Cria o Repositório (Passando o Banco)
+            val repo = remember { PromoRepository(fbDB) }
+
+            // 3. Cria o ViewModel (Passando o Repositório via Factory)
             val viewModel: MainViewModel by viewModels {
-                MainViewModelFactory(fbDB)
+                MainViewModelFactory(repo)
             }
 
             val navController = rememberNavController()
@@ -40,7 +44,6 @@ class MainActivity : ComponentActivity() {
             val launcher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.RequestPermission(),
                 onResult = { isGranted ->
-                    // Opcional: Lidar com a resposta da permissão
                 }
             )
 

@@ -20,6 +20,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
+import androidx.compose.runtime.collectAsState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,6 +32,7 @@ fun MapPage(
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(recife, 12f)
     }
+    val promoList by viewModel.promos.collectAsState()
 
     val context = LocalContext.current
     val hasLocationPermission by remember {
@@ -62,8 +64,7 @@ fun MapPage(
                 ),
                 onMapClick = { selectedPromo = null } // Clicar fora fecha o detalhe
             ) {
-                // Desenha os pinos baseados na lista do ViewModel
-                viewModel.promos.forEach { promo ->
+                promoList.forEach { promo ->
                     if (promo.localizacao != null) {
                         Marker(
                             state = MarkerState(position = promo.localizacao),
