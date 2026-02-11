@@ -3,6 +3,7 @@ package com.example.promomap.ui.theme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -152,7 +154,11 @@ fun CadPromoPage(
                     .clip(RoundedCornerShape(12.dp))
                     .background(Color(0xFFF1F8E9)) // Fundo verde bem claro
                     .border(2.dp, Color(0xFF80CBC4), RoundedCornerShape(12.dp)) // Borda tracejada visual
-                    .clickable { onImageClick() }, // Chama o evento, a lógica de abrir galeria fica fora
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = rememberRipple(),
+                        onClick = { onImageClick() }
+                    ), // Chama o evento, a lógica de abrir galeria fica fora
                 contentAlignment = Alignment.Center
             ) {
                 // Aqui entraria a lógica de mostrar a imagem selecionada futuramente

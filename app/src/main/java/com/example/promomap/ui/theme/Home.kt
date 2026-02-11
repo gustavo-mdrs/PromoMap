@@ -4,14 +4,17 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -106,7 +109,11 @@ fun HomePage(
                     .clip(CircleShape)
                     .background(Color(0xFFE8F5E9)) // Fundo verde bem claro
                     .border(8.dp, Color(0xFFA5D6A7), CircleShape) // Borda verde clara
-                    .clickable { onNavigateToMap() } // Ação de navegar para o mapa
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = rememberRipple(),
+                        onClick = { onNavigateToMap() }
+                    ) // Ação de navegar para o mapa
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     // Tente usar a imagem do mapa que você tem (R.drawable.imgmapa)

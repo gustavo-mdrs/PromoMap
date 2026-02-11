@@ -41,6 +41,16 @@ import com.google.firebase.auth.auth
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Se o usuário já estiver logado no Firebase, pula direto para a MainActivity
+        if (Firebase.auth.currentUser != null) {
+            val intent = Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
+            startActivity(intent)
+            finish()
+            return
+        }
+
         setContent {
             PromoMapTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -49,87 +59,88 @@ class LoginActivity : ComponentActivity() {
             }
         }
     }
-}
 
-@Composable
-fun LoginPage(modifier: Modifier = Modifier) {
-    var email by rememberSaveable { mutableStateOf("") }
-    var password by rememberSaveable { mutableStateOf("") }
+    @Composable
+    fun LoginPage(modifier: Modifier = Modifier) {
+        var email by rememberSaveable { mutableStateOf("") }
+        var password by rememberSaveable { mutableStateOf("") }
 
-    // SOLUÇÃO: Usamos o LocalContext e convertemos para Activity
-    val context = LocalContext.current
-    val activity = context as? ComponentActivity
+        // SOLUÇÃO: Usamos o LocalContext e convertemos para Activity
+        val context = LocalContext.current
+        val activity = context as? ComponentActivity
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-
-        Image(
-            painter = painterResource(id = R.drawable.logo),
-            contentDescription = "Logo do PromoMap"
-        )
-
-        Spacer(modifier = Modifier.height(40.dp))
-
-        // Campo de Email
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Insira seu Email") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Campo de Senha
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Insira sua senha") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Botão de Login
-        Button(
-            onClick = {
-                if (email.isNotEmpty() && password.isNotEmpty() && activity != null) {
-                    Firebase.auth.signInWithEmailAndPassword(email, password)
-                        .addOnCompleteListener(activity) { task ->
-                            if (task.isSuccessful) {
-                                val intent = Intent(activity, MainActivity::class.java).apply {
-                                    flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-                                }
-                                activity.startActivity(intent)
-                                activity.finish() // Fecha o login
-                                Toast.makeText(activity, "Login OK!", Toast.LENGTH_LONG).show()
-                            } else {
-                                Toast.makeText(activity, "Login FALHOU!", Toast.LENGTH_LONG).show()
-                            }
-                        }
-                }
-            },
-            enabled = email.isNotEmpty() && password.isNotEmpty(),
-            modifier = Modifier.fillMaxWidth()
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Text("Login")
-        }
 
-        // Navegação para Registro
-        TextButton(onClick = {
-            if (activity != null) {
-                // Certifique-se de que a RegisterActivity existe no projeto
-                val intent = Intent(activity, RegisterActivity::class.java)
-                activity.startActivity(intent)
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "Logo do PromoMap"
+            )
+
+            Spacer(modifier = Modifier.height(40.dp))
+
+            // Campo de Email
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Insira seu Email") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Campo de Senha
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Insira sua senha") },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Botão de Login
+            Button(
+                onClick = {
+                    if (email.isNotEmpty() && password.isNotEmpty() && activity != null) {
+                        Firebase.auth.signInWithEmailAndPassword(email, password)
+                            .addOnCompleteListener(activity) { task ->
+                                if (task.isSuccessful) {
+                                    val intent = Intent(activity, MainActivity::class.java).apply {
+                                        flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+                                    }
+                                    activity.startActivity(intent)
+                                    activity.finish() // Fecha o login
+                                    Toast.makeText(activity, "Login OK!", Toast.LENGTH_LONG).show()
+                                } else {
+                                    Toast.makeText(activity, "Login FALHOU!", Toast.LENGTH_LONG)
+                                        .show()
+                                }
+                            }
+                    }
+                },
+                enabled = email.isNotEmpty() && password.isNotEmpty(),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Login")
             }
-        }) {
-            Text("Não tem uma conta ainda? Registre-se")
+
+            // Navegação para Registro
+            TextButton(onClick = {
+                if (activity != null) {
+                    // Certifique-se de que a RegisterActivity existe no projeto
+                    val intent = Intent(activity, RegisterActivity::class.java)
+                    activity.startActivity(intent)
+                }
+            }) {
+                Text("Não tem uma conta ainda? Registre-se")
+            }
         }
     }
 }
