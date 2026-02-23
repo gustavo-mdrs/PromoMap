@@ -3,6 +3,7 @@ package com.example.promomap.repo
 import com.example.promomap.db.fb.FBDatabase
 import com.example.promomap.db.fb.toFBPromo
 import com.example.promomap.model.Promo
+import com.example.promomap.model.User
 import kotlinx.coroutines.flow.Flow
 
 class PromoRepository(private val fbDatabase: FBDatabase) {
@@ -21,5 +22,5 @@ class PromoRepository(private val fbDatabase: FBDatabase) {
         }
     }
 
-    fun getCurrentUser() = fbDatabase.getCurrentUser()
+    fun getLoggedUser(): Flow<User?> = fbDatabase.getLoggedUser()
 }

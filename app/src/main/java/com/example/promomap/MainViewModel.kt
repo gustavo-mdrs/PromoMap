@@ -31,8 +31,12 @@ class MainViewModel(private val repo: PromoRepository) : ViewModel() {
             initialValue = emptyList()
         )
 
-    val user: User?
-        get() = repo.getCurrentUser()
+    val user: StateFlow<User?> = repo.getLoggedUser()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Lazily,
+            initialValue = null
+        )
 
     // Promoção selecionada para o BottomSheet
     private var _selectedPromo = mutableStateOf<Promo?>(null)

@@ -1,6 +1,11 @@
 package com.example.promomap.ui.theme.nav
 
 import android.content.Intent
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
@@ -17,6 +22,12 @@ import com.example.promomap.ui.theme.PerfilPage
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 
 @Composable
 fun MainNavHost(
@@ -25,6 +36,8 @@ fun MainNavHost(
 ) {
     // Pegamos o contexto para poder iniciar a Activity de Login ao sair
     val context = LocalContext.current
+
+    val user by viewModel.user.collectAsState()
 
     // Função centralizada para fazer o logout e limpar a pilha de navegação
     val fazerLogout = {
@@ -35,6 +48,9 @@ fun MainNavHost(
         context.startActivity(intent)
     }
 
+    var showEditDialog by remember { mutableStateOf(false) }
+    var newName by remember { mutableStateOf("") }
+
     NavHost(
         navController = navController,
         startDestination = Route.Home
@@ -43,7 +59,7 @@ fun MainNavHost(
         // --- TELA 1: HOME ---
         composable<Route.Home> {
             HomePage(
-                userName = viewModel.user?.name ?: "Usuário",
+                userName = user?.name ?: "Carregando...",
                 onNavigateToMap = { viewModel.page = Route.Map },
                 onNavigateToCadPromo = { viewModel.page = Route.CadPromo },
                 onNavigateToConfig = { viewModel.page = Route.Config },
@@ -69,15 +85,43 @@ fun MainNavHost(
 
         // --- TELA 4: PERFIL ---
         composable<Route.Perfil> {
-            val user = viewModel.user
             PerfilPage(
                 userName = user?.name ?: "Carregando...",
                 userEmail = user?.email ?: "",
                 userCpf = user?.cpf ?: "",
                 onBackClick = { viewModel.page = Route.Home },
-                onEditClick = { /* Futuro: Ir para edição */ },
-                onLogoutClick = { fazerLogout() } // <--- LÓGICA DE LOGOUT APLICADA AQUI TAMBÉM
+                onEditNameClick = {
+                    newName = user?.name ?: ""
+                    showEditDialog = true
+                }
             )
+
+            // Lógica do Diálogo de Edição
+            if (showEditDialog) {
+                AlertDialog(
+                    onDismissRequest = { showEditDialog = false },
+                    title = { Text("Editar Nome") },
+                    text = {
+                        OutlinedTextField(
+                            value = newName,
+                            onValueChange = { newName = it },
+                            label = { Text("Nome Completo") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                showEditDialog = false
+                            }
+                        ) { Text("Salvar") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showEditDialog = false }) { Text("Cancelar") }
+                    }
+                )
+            }
         }
 
         // --- TELA 5: CADASTRO DE PROMOÇÃO ---

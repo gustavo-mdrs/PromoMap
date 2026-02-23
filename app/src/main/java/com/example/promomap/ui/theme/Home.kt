@@ -12,7 +12,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -111,10 +110,8 @@ fun HomePage(
                     .background(Color(0xFFE8F5E9)) // Fundo verde bem claro
                     .border(8.dp, Color(0xFFA5D6A7), CircleShape) // Borda verde clara
                     .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple(),
-                        onClick = { onNavigateToMap() }
-                    ) // Ação de navegar para o mapa
+                        onClick = onNavigateToMap
+                    )
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     // Tente usar a imagem do mapa que você tem (R.drawable.imgmapa)

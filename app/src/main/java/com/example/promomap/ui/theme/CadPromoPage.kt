@@ -13,7 +13,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -156,7 +155,7 @@ fun CadPromoPage(
                     .border(2.dp, Color(0xFF80CBC4), RoundedCornerShape(12.dp)) // Borda tracejada visual
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple(),
+                        indication = ripple(),
                         onClick = { onImageClick() }
                     ), // Chama o evento, a lógica de abrir galeria fica fora
                 contentAlignment = Alignment.Center
