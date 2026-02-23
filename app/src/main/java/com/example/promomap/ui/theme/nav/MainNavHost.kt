@@ -48,7 +48,7 @@ fun MainNavHost(
                 onNavigateToCadPromo = { viewModel.page = Route.CadPromo },
                 onNavigateToConfig = { viewModel.page = Route.Config },
                 onNavigateToProfile = { viewModel.page = Route.Perfil },
-                onLogout = { fazerLogout() } // <--- LÓGICA DE LOGOUT APLICADA
+                onLogout = { fazerLogout() }
             )
         }
 

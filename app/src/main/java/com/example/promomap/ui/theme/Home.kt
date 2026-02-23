@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
@@ -73,11 +74,11 @@ fun HomePage(
 
             // Botão Sair
             TextButton(onClick = onLogout) {
-                Text(
-                    text = "Sair",
-                    color = Color.White,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
+                Icon(
+                    imageVector = Icons.Default.ExitToApp,
+                    contentDescription = "Sair",
+                    tint = Color.White,
+                    modifier = Modifier.size(28.dp)
                 )
             }
         }
@@ -92,7 +93,7 @@ fun HomePage(
         ) {
             // Saudação
             Text(
-                text = "Bem-vindo/a, $userName!",
+                text = "Olá, $userName!",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Medium,
                 color = Color(0xFF1B5E20)

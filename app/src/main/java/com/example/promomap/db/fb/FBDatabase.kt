@@ -70,4 +70,35 @@ class FBDatabase {
         val uid = auth.currentUser?.uid ?: return
         db.collection("users").document(uid).set(user)
     }
+
+    fun getLoggedUser(): Flow<User?> = callbackFlow {
+        val uid = auth.currentUser?.uid
+
+        if (uid == null) {
+            trySend(null)
+            return@callbackFlow
+        }
+
+        // Vai na coleção "users", no documento com o ID do usuário logado
+        val listener = db.collection("users").document(uid)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null && snapshot.exists()) {
+                    // Pega os campos exatos que você salvou no RegisterActivity
+                    val nome = snapshot.getString("name") ?: "" // Se você salvou como "nome", troque aqui
+                    val cpf = snapshot.getString("cpf") ?: ""
+                    val email = snapshot.getString("email") ?: ""
+
+                    trySend(User(name = nome, cpf = cpf, email = email))
+                } else {
+                    trySend(null)
+                }
+            }
+
+        awaitClose { listener.remove() }
+    }
 }
