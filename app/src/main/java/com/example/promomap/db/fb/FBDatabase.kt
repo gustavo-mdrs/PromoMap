@@ -9,17 +9,28 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import com.google.firebase.firestore.Query
 
 class FBDatabase {
     private val auth = Firebase.auth
     private val db = Firebase.firestore
 
     // Retorna o usuário atual
-    fun getCurrentUser(): User? {
-        val fbUser = auth.currentUser
-        // Nota: Para simplificar, retornamos um User básico.
-        // Se precisar do CPF, teria que buscar no Firestore, mas para Auth basta isso por enquanto.
-        return if (fbUser != null) User(fbUser.displayName ?: "", "", fbUser.email ?: "") else null
+    fun getLoggedUser(): Flow<User?> = callbackFlow {
+        val uid = auth.currentUser?.uid ?: return@callbackFlow
+        val listener = db.collection("users").document(uid)
+            .addSnapshotListener { snapshot, _ ->
+                if (snapshot != null && snapshot.exists()) {
+                    // Certifique-se de que os nomes em vermelho abaixo são IGUAIS aos do seu console Firebase
+                    val user = User(
+                        name = snapshot.getString("name") ?: "",
+                        cpf = snapshot.getString("cpf") ?: "",   // O segundo campo deve ser o CPF
+                        email = snapshot.getString("email") ?: "" // O terceiro campo deve ser o Email
+                    )
+                    trySend(user)
+                }
+            }
+        awaitClose { listener.remove() }
     }
 
     // --- O GRANDE TRUNFO: FLOW EM VEZ DE LISTENER ---
@@ -71,34 +82,61 @@ class FBDatabase {
         db.collection("users").document(uid).set(user)
     }
 
-    fun getLoggedUser(): Flow<User?> = callbackFlow {
-        val uid = auth.currentUser?.uid
+    suspend fun updateUserName(newName: String) {
+        val uid = auth.currentUser?.uid ?: return
+        try {
+            db.collection("users").document(uid)
+                .update("name", newName)
+                .await()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 
+    fun getVisitHistory(): Flow<List<Promo>> = callbackFlow {
+        val uid = auth.currentUser?.uid
         if (uid == null) {
-            trySend(null)
+            trySend(emptyList())
             return@callbackFlow
         }
 
-        // Vai na coleção "users", no documento com o ID do usuário logado
         val listener = db.collection("users").document(uid)
+            .collection("historico")
+            .orderBy("timestamp", Query.Direction.DESCENDING)
+            .limit(20)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     close(error)
                     return@addSnapshotListener
                 }
-
-                if (snapshot != null && snapshot.exists()) {
-                    // Pega os campos exatos que você salvou no RegisterActivity
-                    val nome = snapshot.getString("name") ?: "" // Se você salvou como "nome", troque aqui
-                    val cpf = snapshot.getString("cpf") ?: ""
-                    val email = snapshot.getString("email") ?: ""
-
-                    trySend(User(name = nome, cpf = cpf, email = email))
-                } else {
-                    trySend(null)
-                }
+                val history = snapshot?.documents?.mapNotNull { doc ->
+                    val fbPromo = doc.toObject(FBPromo::class.java)
+                    fbPromo?.id = doc.id
+                    fbPromo?.toPromo()
+                } ?: emptyList()
+                trySend(history)
             }
-
         awaitClose { listener.remove() }
+    }
+
+    suspend fun addToHistory(promo: Promo) {
+        val uid = auth.currentUser?.uid ?: return
+        val promoMap = hashMapOf(
+            "item" to promo.item,
+            "marca" to promo.marca,
+            "preco" to promo.preco,
+            "lat" to promo.localizacao?.latitude,
+            "lng" to promo.localizacao?.longitude,
+            "timestamp" to com.google.firebase.Timestamp.now()
+        )
+
+        try {
+            db.collection("users").document(uid)
+                .collection("historico")
+                .add(promoMap)
+                .await()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }

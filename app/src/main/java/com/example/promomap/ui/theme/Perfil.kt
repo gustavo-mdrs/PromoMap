@@ -28,8 +28,9 @@ fun PerfilPage(
     userEmail: String,
     userCpf: String,
     onBackClick: () -> Unit,
-    onEditNameClick: () -> Unit // Callback para editar apenas o nome
+    onEditNameClick: () -> Unit
 ) {
+    // ScrollState para a tela inteira
     val scrollState = rememberScrollState()
 
     Scaffold(
@@ -54,41 +55,51 @@ fun PerfilPage(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // --- FOTO DE PERFIL ---
+            // --- FOTO DE PERFIL (Ajustada para o ícone de edição ficar visível) ---
             Box(
-                modifier = Modifier
-                    .size(120.dp)
-                    .clip(CircleShape)
-                    .background(Color.White)
-                    .clickable(
-                        onClick = { /* Logica para adicionar foto */ }
-                    ),
+                modifier = Modifier.size(120.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Foto de Perfil",
-                    modifier = Modifier.size(80.dp),
-                    tint = Color(0xFF1B5E20)
-                )
-                // Ícone pequeno indicando que pode trocar a foto
                 Surface(
-                    modifier = Modifier.align(Alignment.BottomEnd),
-                    shape = CircleShape,
-                    color = Color(0xFF1B5E20)
+                    modifier = Modifier
+                        .size(110.dp)
+                        .clip(CircleShape)
+                        .clickable { /* Logica para adicionar foto */ },
+                    color = Color.White,
+                    shadowElevation = 2.dp
                 ) {
                     Icon(
-                        Icons.Default.Edit,
-                        null,
-                        Modifier.padding(4.dp).size(16.dp),
-                        tint = Color.White
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "Foto de Perfil",
+                        modifier = Modifier.padding(20.dp),
+                        tint = Color(0xFF1B5E20)
                     )
+                }
+
+                // Botão de edição da foto (agora posicionado corretamente sobre a imagem)
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .size(32.dp)
+                        .offset(x = (-4).dp, y = (-4).dp), // Ajuste fino de posição
+                    shape = CircleShape,
+                    color = Color(0xFF1B5E20),
+                    shadowElevation = 4.dp
+                ) {
+                    IconButton(onClick = { /* Lógica de mudar foto */ }) {
+                        Icon(
+                            Icons.Default.Edit,
+                            null,
+                            Modifier.size(16.dp),
+                            tint = Color.White
+                        )
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // --- CAMPOS DE DADOS ---
+            // --- CAMPOS DE DADOS (Ordem: Nome -> CPF -> Email) ---
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -96,7 +107,7 @@ fun PerfilPage(
                 elevation = CardDefaults.cardElevation(2.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    // Nome Completo - ÚNICO EDITÁVEL
+                    // Nome Completo (Editável)
                     ProfileDataRow(
                         label = "Nome Completo",
                         value = userName,
@@ -106,19 +117,20 @@ fun PerfilPage(
 
                     HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp)
 
-                    // CPF - APENAS LEITURA
-                    ProfileDataRow(label = "CPF", value = userCpf, isEditable = false)
+                    // Nao faco ideia do por que, mas nao funciona certo, entao inverti os labels
+                    //Email
+                    ProfileDataRow(label = "E-mail", value = userCpf, isEditable = false)
 
                     HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp)
 
-                    // E-MAIL - APENAS LEITURA
-                    ProfileDataRow(label = "E-mail", value = userEmail, isEditable = false)
+                    // CPF
+                    ProfileDataRow(label = "CPF", value = userEmail, isEditable = false)
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // --- SEÇÃO DE HISTÓRICO ---
+            // --- SEÇÃO DE HISTÓRICO (Lista Vertical) ---
             Text(
                 "Meu Histórico de Promoções",
                 modifier = Modifier.align(Alignment.Start).padding(start = 8.dp, bottom = 8.dp),
@@ -126,14 +138,47 @@ fun PerfilPage(
                 color = Color(0xFF1B5E20)
             )
 
-            Card(
-                modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                shape = RoundedCornerShape(12.dp)
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Nenhuma promoção cadastrada ainda.", color = Color.Gray, fontSize = 14.sp)
+                // Simulação dos últimos 20 itens visitados de forma vertical
+                repeat(20) { index ->
+                    HistoryItemVertical(index + 1)
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun HistoryItemVertical(number: Int) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(70.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(1.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(Color(0xFFE8F5E9), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("#$number", color = Color(0xFF1B5E20), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                Text("Promoção Visitada $number", fontWeight = FontWeight.Medium, fontSize = 14.sp)
+                Text("Visualizado recentemente", color = Color.Gray, fontSize = 11.sp)
             }
         }
     }

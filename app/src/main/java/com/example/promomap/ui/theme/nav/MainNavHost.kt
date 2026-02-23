@@ -110,10 +110,16 @@ fun MainNavHost(
                             modifier = Modifier.fillMaxWidth()
                         )
                     },
+                    // Dentro do composable<Route.Perfil>
                     confirmButton = {
                         TextButton(
                             onClick = {
-                                showEditDialog = false
+                                if (newName.isNotBlank()) {
+                                    // 1. DISPARA A LÓGICA
+                                    viewModel.updateUserName(newName)
+                                    // 2. FECHA O DIÁLOGO
+                                    showEditDialog = false
+                                }
                             }
                         ) { Text("Salvar") }
                     },

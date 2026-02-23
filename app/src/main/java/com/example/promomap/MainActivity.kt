@@ -19,23 +19,23 @@ import com.example.promomap.db.fb.FBDatabase
 import com.example.promomap.repo.PromoRepository
 import com.example.promomap.ui.theme.PromoMapTheme
 import com.example.promomap.ui.theme.nav.MainNavHost
+import com.example.promomap.repo.UserRepository
 
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
         setContent {
-            // 1. Cria o Banco de Dados
             val fbDB = remember { FBDatabase() }
 
-            // 2. Cria o Repositório (Passando o Banco)
-            val repo = remember { PromoRepository(fbDB) }
+            // Instanciando ambos os repositórios
+            val promoRepo = remember { PromoRepository(fbDB) }
+            val userRepo = remember { UserRepository(fbDB) }
 
-            // 3. Cria o ViewModel (Passando o Repositório via Factory)
+            // Passando ambos para a Factory
             val viewModel: MainViewModel by viewModels {
-                MainViewModelFactory(repo)
+                MainViewModelFactory(promoRepo, userRepo)
             }
 
             val navController = rememberNavController()
