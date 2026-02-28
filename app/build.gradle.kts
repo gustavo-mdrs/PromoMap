@@ -54,6 +54,9 @@ dependencies {
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
 
+    //Worker
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+
     // Compose BOM - Updated to match libs.versions.toml (2024.09.00)
     implementation(platform(libs.androidx.compose.bom))
     implementation("androidx.compose.ui:ui")

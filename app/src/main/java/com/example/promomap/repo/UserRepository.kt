@@ -22,4 +22,10 @@ class UserRepository(private val fbDatabase: FBDatabase) {
     suspend fun addToHistory(promo: Promo) {
         fbDatabase.addToHistory(promo)
     }
+
+    suspend fun toggleNotification(key: String, enabled: Boolean) = fbDatabase.updateNotificationSetting(key, enabled)
+    suspend fun addFavorite(name: String) = fbDatabase.addFavorite(name)
+    suspend fun saveLocation(name: String, addr: String, rad: String) = fbDatabase.saveLocation(name, addr, rad)
+
+    fun getFavorites(): Flow<List<String>> = fbDatabase.getFavorites()
 }

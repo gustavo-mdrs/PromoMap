@@ -76,10 +76,8 @@ fun MainNavHost(
         // --- TELA 3: CONFIGURAÇÕES ---
         composable<Route.Config> {
             ConfigPage(
-                onBackClick = { viewModel.page = Route.Home },
-                onDeleteAccountClick = {
-                    // Lógica futura de excluir conta
-                }
+                viewModel = viewModel,
+                onBackClick = { viewModel.page = Route.Home }
             )
         }
 

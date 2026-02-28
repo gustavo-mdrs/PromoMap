@@ -139,4 +139,50 @@ class FBDatabase {
             e.printStackTrace()
         }
     }
+
+    // 1. Notificações
+    suspend fun updateNotificationSetting(key: String, enabled: Boolean) {
+        val uid = auth.currentUser?.uid ?: return
+        db.collection("users").document(uid)
+            .update("settings.$key", enabled).await() // Salva como um sub-objeto settings
+    }
+
+    // 2. Favoritos
+    suspend fun addFavorite(productName: String) {
+        val uid = auth.currentUser?.uid ?: return
+        db.collection("users").document(uid)
+            .update("favorites", com.google.firebase.firestore.FieldValue.arrayUnion(productName)).await()
+    }
+    suspend fun removeFavorite(productName: String) {
+        val uid = auth.currentUser?.uid ?: return
+        db.collection("users").document(uid)
+            .update("favorites", com.google.firebase.firestore.FieldValue.arrayRemove(productName)).await()
+    }
+    fun getFavorites(): Flow<List<String>> = callbackFlow {
+        val uid = auth.currentUser?.uid
+        if (uid == null) {
+            trySend(emptyList())
+            return@callbackFlow
+        }
+
+        val listener = db.collection("users").document(uid)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                val favorites = snapshot?.get("favorites") as? List<String> ?: emptyList()
+                trySend(favorites)
+            }
+        awaitClose { listener.remove() }
+    }
+
+    // 3. Locais
+    suspend fun saveLocation(name: String, address: String, radius: String) {
+        val uid = auth.currentUser?.uid ?: return
+        val locMap = hashMapOf("name" to name, "address" to address, "radius" to radius)
+        db.collection("users").document(uid)
+            .update("savedLocations", com.google.firebase.firestore.FieldValue.arrayUnion(locMap)).await()
+    }
 }

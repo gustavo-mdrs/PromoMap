@@ -1,6 +1,7 @@
 package com.example.promomap
 
 import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -15,19 +16,53 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.example.promomap.db.fb.FBDatabase
 import com.example.promomap.repo.PromoRepository
 import com.example.promomap.ui.theme.PromoMapTheme
 import com.example.promomap.ui.theme.nav.MainNavHost
 import com.example.promomap.repo.UserRepository
+import com.example.promomap.util.NotificationHelper
+import com.example.promomap.util.PromoWorker
+import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+
+        NotificationHelper.createNotificationChannel(this)
+
+
+        val promoWorkRequest = PeriodicWorkRequestBuilder<PromoWorker>(15, TimeUnit.MINUTES)
+            .build()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "ChecarPromocoesWork",
+            ExistingPeriodicWorkPolicy.KEEP, // Mantém se já estiver agendado
+            promoWorkRequest
+        )
+
         enableEdgeToEdge()
 
         setContent {
             val fbDB = remember { FBDatabase() }
+
+
+            val permissionLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestPermission()
+            ) { isGranted ->
+                if (isGranted) {
+                }
+            }
+
+            LaunchedEffect(Unit) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    permissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                }
+            }
 
             // Instanciando ambos os repositórios
             val promoRepo = remember { PromoRepository(fbDB) }

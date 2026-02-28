@@ -9,6 +9,7 @@ import com.example.promomap.model.User
 import com.example.promomap.repo.PromoRepository
 import com.example.promomap.repo.UserRepository
 import com.example.promomap.ui.theme.nav.Route
+import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -40,6 +41,9 @@ class MainViewModel(
             initialValue = null
         )
 
+    val favorites: StateFlow<List<String>> = userRepo.getFavorites()
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
     val visitHistory: StateFlow<List<Promo>> = userRepo.getVisitHistory()
         .stateIn(
             scope = viewModelScope,
@@ -68,6 +72,41 @@ class MainViewModel(
 
     fun markAsVisited(promo: Promo) {
         viewModelScope.launch { userRepo.addToHistory(promo) }
+    }
+
+    fun toggleNotification(key: String, enabled: Boolean) {
+        viewModelScope.launch { userRepo.toggleNotification(key, enabled) }
+    }
+
+    fun addFavoriteProduct(product: String) {
+        viewModelScope.launch { userRepo.addFavorite(product) }
+    }
+
+    fun saveNewLocation(name: String, addr: String, rad: String) {
+        viewModelScope.launch { userRepo.saveLocation(name, addr, rad) }
+    }
+
+    fun getAlerts(promos: List<Promo>, userLocation: LatLng): List<Promo> {
+        val favs = favorites.value
+        return promos.filter { promo ->
+            // O produto está nos favoritos?
+            val isFavorite = favs.any { it.equals(promo.item, ignoreCase = true) }
+
+            // A promoção está a menos de 5km? (Cálculo simples de distância)
+            val distance = calculateDistance(userLocation, promo.localizacao ?: userLocation)
+
+            isFavorite && distance <= 5.0
+        }
+    }
+
+    // Cálculo simples de distância em KM
+    private fun calculateDistance(start: LatLng, end: LatLng): Double {
+        val results = FloatArray(1)
+        android.location.Location.distanceBetween(
+            start.latitude, start.longitude,
+            end.latitude, end.longitude, results
+        )
+        return results[0] / 1000.0 // converte metros para km
     }
 }
 
