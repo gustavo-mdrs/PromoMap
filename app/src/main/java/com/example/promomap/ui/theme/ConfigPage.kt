@@ -108,7 +108,7 @@ fun ConfigPage(
                     favs.forEach { fav ->
                         Row(modifier = Modifier.fillMaxWidth().padding(4.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                             Text("• $fav")
-                            IconButton(onClick = { /* viewModel.removeFavorite(fav) */ }) {
+                            IconButton(onClick = { viewModel.removeFavoriteProduct(fav) }) {
                                 Icon(Icons.Default.Delete, null, tint = Color.Gray)
                             }
                         }
@@ -139,6 +139,7 @@ fun ConfigPage(
                 var apelido by remember { mutableStateOf("") }
                 var endereco by remember { mutableStateOf("") }
                 var raio by remember { mutableStateOf("5") }
+                val locaisSalvos by viewModel.savedLocations.collectAsState()
 
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Adicione locais como Casa ou Trabalho para monitorar raios de busca.", fontSize = 12.sp, color = Color.Gray)
@@ -164,7 +165,12 @@ fun ConfigPage(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Button(
-                            onClick = { /* Ação de salvar local */ },
+                            onClick = {
+                                if (apelido.isNotBlank() && endereco.isNotBlank()) {
+                                    viewModel.saveNewLocation(apelido, endereco, raio)
+                                    apelido = ""; endereco = ""; raio = "5"
+                                }
+                            },
                             modifier = Modifier.height(56.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = themeColor)
                         ) {
@@ -175,8 +181,14 @@ fun ConfigPage(
 
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-                    // Exemplo de item salvo
-                    SavedLocationItem("Casa", "Rua Exemplo, 123", "5km")
+                    locaisSalvos.forEach { loc ->
+                        SavedLocationItem(
+                            label = loc["name"] ?: "",
+                            address = loc["address"] ?: "",
+                            radius = loc["radius"] ?: "5",
+                            onDeleteClick = { viewModel.removeSavedLocation(loc) } // <-- Lógica de excluir
+                        )
+                    }
                 }
             }
 
@@ -228,7 +240,7 @@ fun ExpandableConfigCard(
 }
 
 @Composable
-fun SavedLocationItem(label: String, address: String, radius: String) {
+fun SavedLocationItem(label: String, address: String, radius: String, onDeleteClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -243,7 +255,7 @@ fun SavedLocationItem(label: String, address: String, radius: String) {
             Text(address, fontSize = 12.sp, color = Color.Gray)
             Text("Raio: $radius", fontSize = 11.sp, color = Color(0xFF1B5E20))
         }
-        IconButton(onClick = { /* Deletar local */ }) {
+        IconButton(onClick = onDeleteClick) {
             Icon(Icons.Default.Delete, contentDescription = "Remover", tint = Color.Gray)
         }
     }

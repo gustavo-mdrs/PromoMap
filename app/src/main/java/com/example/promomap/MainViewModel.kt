@@ -108,6 +108,17 @@ class MainViewModel(
         )
         return results[0] / 1000.0 // converte metros para km
     }
+
+    fun removeFavoriteProduct(product: String) {
+        viewModelScope.launch { userRepo.removeFavorite(product) }
+    }
+
+    val savedLocations: StateFlow<List<Map<String, String>>> = userRepo.getSavedLocations()
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    fun removeSavedLocation(locMap: Map<String, String>) {
+        viewModelScope.launch { userRepo.removeLocation(locMap) }
+    }
 }
 
 // Factory atualizada para injetar os dois repositórios

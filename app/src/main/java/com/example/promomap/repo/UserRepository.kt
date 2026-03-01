@@ -28,4 +28,7 @@ class UserRepository(private val fbDatabase: FBDatabase) {
     suspend fun saveLocation(name: String, addr: String, rad: String) = fbDatabase.saveLocation(name, addr, rad)
 
     fun getFavorites(): Flow<List<String>> = fbDatabase.getFavorites()
+    suspend fun removeFavorite(name: String) = fbDatabase.removeFavorite(name)
+    fun getSavedLocations(): Flow<List<Map<String, String>>> = fbDatabase.getSavedLocations()
+    suspend fun removeLocation(locMap: Map<String, String>) = fbDatabase.removeLocation(locMap)
 }

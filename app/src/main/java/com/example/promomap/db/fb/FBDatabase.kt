@@ -185,4 +185,53 @@ class FBDatabase {
         db.collection("users").document(uid)
             .update("savedLocations", com.google.firebase.firestore.FieldValue.arrayUnion(locMap)).await()
     }
+
+    // Ler locais em tempo real
+    fun getSavedLocations(): Flow<List<Map<String, String>>> = callbackFlow {
+        val uid = auth.currentUser?.uid
+        if (uid == null) {
+            trySend(emptyList())
+            return@callbackFlow
+        }
+
+        val listener = db.collection("users").document(uid)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                // Pega a lista de mapas do Firestore
+                val locs = snapshot?.get("savedLocations") as? List<Map<String, String>> ?: emptyList()
+                trySend(locs)
+            }
+        awaitClose { listener.remove() }
+    }
+
+    // Remover um local
+    suspend fun removeLocation(locMap: Map<String, String>) {
+        val uid = auth.currentUser?.uid ?: return
+        db.collection("users").document(uid)
+            .update("savedLocations", com.google.firebase.firestore.FieldValue.arrayRemove(locMap)).await()
+    }
+
+    // Puxa as promoções uma única vez para o Worker
+    suspend fun getPromosOnce(): List<Promo> {
+        return try {
+            val snapshot = db.collection("promocoes").get().await()
+            snapshot.documents.mapNotNull { doc ->
+                val fbPromo = doc.toObject(FBPromo::class.java)
+                fbPromo?.id = doc.id
+                fbPromo?.toPromo()
+            }
+        } catch (e: Exception) { emptyList() }
+    }
+
+    // Puxa os dados do usuário (Favoritos e Locais) uma única vez
+    suspend fun getUserSettingsOnce(): Map<String, Any>? {
+        val uid = auth.currentUser?.uid ?: return null
+        return try {
+            val doc = db.collection("users").document(uid).get().await()
+            doc.data
+        } catch (e: Exception) { null }
+    }
 }
