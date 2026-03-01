@@ -19,11 +19,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.android.gms.maps.model.LatLng
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,10 +34,14 @@ fun CadPromoPage(
     // Callbacks: A tela avisa "o usuário clicou aqui", mas não decide o que fazer
     onBackClick: () -> Unit,
     onImageClick: () -> Unit,
-    onSaveClick: (String, String, String, Double) -> Unit
+    onSaveClick: (String, String, String, Double, LatLng?) -> Unit
 ) {
-    // Estados de UI (apenas o texto que está sendo digitado)
+
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var promoLocation by remember { mutableStateOf<LatLng?>(null) }
     var localName by remember { mutableStateOf("") }
+    var isFetchingLocation by remember { mutableStateOf(false) }
     var produto by remember { mutableStateOf("") }
     var marca by remember { mutableStateOf("") }
     var preco by remember { mutableStateOf("") }
@@ -91,8 +98,32 @@ fun CadPromoPage(
                 },
                 shape = RoundedCornerShape(8.dp)
             )
-
-            // TODO: Aqui futuramente poderíamos mostrar um texto: "Localização GPS detectada"
+            TextButton(
+                onClick = {
+                    scope.launch {
+                        isFetchingLocation = true
+                        // Chama a nossa função de GPS do LocationUtils
+                        val gps = com.example.promomap.util.LocationUtils.obterLocalizacaoAtual(context)
+                        if (gps != null) {
+                            promoLocation = gps
+                            android.widget.Toast.makeText(context, "Localização capturada!", android.widget.Toast.LENGTH_SHORT).show()
+                        } else {
+                            android.widget.Toast.makeText(context, "Ligue o GPS do celular.", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                        isFetchingLocation = false
+                    }
+                },
+                modifier = Modifier.align(Alignment.Start) // Alinha à esquerda
+            ) {
+                Icon(Icons.Default.Place, contentDescription = "Pegar GPS", tint = Color(0xFF1B5E20))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = if (isFetchingLocation) "Buscando satélite..."
+                    else if (promoLocation != null) "GPS Capturado com sucesso! ✓"
+                    else "Usar minha localização atual (GPS)",
+                    color = if (promoLocation != null) Color(0xFF1B5E20) else Color.Gray
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -200,9 +231,16 @@ fun CadPromoPage(
                 // Botão Cadastrar
                 Button(
                     onClick = {
-                        // Converte o preço e envia para quem chamou a tela processar
                         val precoDouble = preco.replace(",", ".").toDoubleOrNull() ?: 0.0
-                        onSaveClick(localName, produto, marca, precoDouble)
+
+                        // Lançamos uma coroutine porque a busca do endereço pode levar alguns milissegundos
+                        scope.launch {
+                            // Verifica se o usuário já pegou o GPS. Se não, tenta converter o nome digitado em coordenadas.
+                            val finalLocation = promoLocation ?: com.example.promomap.util.LocationUtils.obterCoordenadasPorEndereco(context, localName)
+
+                            // Envia todos os dados, agora incluindo a localização!
+                            onSaveClick(localName, produto, marca, precoDouble, finalLocation)
+                        }
                     },
                     modifier = Modifier
                         .weight(1f)
@@ -224,6 +262,6 @@ fun CadPromoPagePreview() {
     CadPromoPage(
         onBackClick = {},
         onImageClick = {},
-        onSaveClick = { _, _, _, _ -> }
+        onSaveClick = { _, _, _, _, _ -> }
     )
 }

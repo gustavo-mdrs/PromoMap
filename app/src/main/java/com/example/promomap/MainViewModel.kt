@@ -82,8 +82,8 @@ class MainViewModel(
         viewModelScope.launch { userRepo.addFavorite(product) }
     }
 
-    fun saveNewLocation(name: String, addr: String, rad: String) {
-        viewModelScope.launch { userRepo.saveLocation(name, addr, rad) }
+    fun saveNewLocation(name: String, addr: String, rad: String, lat: Double, lng: Double) {
+        viewModelScope.launch { userRepo.saveLocation(name, addr, rad, lat, lng) }
     }
 
     fun getAlerts(promos: List<Promo>, userLocation: LatLng): List<Promo> {

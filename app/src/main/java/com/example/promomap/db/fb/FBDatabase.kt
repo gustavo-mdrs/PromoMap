@@ -179,9 +179,9 @@ class FBDatabase {
     }
 
     // 3. Locais
-    suspend fun saveLocation(name: String, address: String, radius: String) {
+    suspend fun saveLocation(name: String, address: String, radius: String, lat: Double, lng: Double) {
         val uid = auth.currentUser?.uid ?: return
-        val locMap = hashMapOf("name" to name, "address" to address, "radius" to radius)
+        val locMap = hashMapOf("name" to name, "address" to address, "radius" to radius, "lat" to lat.toString(), "lng" to lng.toString())
         db.collection("users").document(uid)
             .update("savedLocations", com.google.firebase.firestore.FieldValue.arrayUnion(locMap)).await()
     }

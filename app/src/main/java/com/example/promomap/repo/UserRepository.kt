@@ -25,7 +25,7 @@ class UserRepository(private val fbDatabase: FBDatabase) {
 
     suspend fun toggleNotification(key: String, enabled: Boolean) = fbDatabase.updateNotificationSetting(key, enabled)
     suspend fun addFavorite(name: String) = fbDatabase.addFavorite(name)
-    suspend fun saveLocation(name: String, addr: String, rad: String) = fbDatabase.saveLocation(name, addr, rad)
+    suspend fun saveLocation(name: String, addr: String, rad: String, lat: Double, lng: Double) = fbDatabase.saveLocation(name, addr, rad, lat, lng)
 
     fun getFavorites(): Flow<List<String>> = fbDatabase.getFavorites()
     suspend fun removeFavorite(name: String) = fbDatabase.removeFavorite(name)

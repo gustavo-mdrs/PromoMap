@@ -22,11 +22,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.promomap.MainViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -137,56 +139,87 @@ fun ConfigPage(
                 onExpandClick = { expandedSection = if (expandedSection == "locais") null else "locais" }
             ) {
                 var apelido by remember { mutableStateOf("") }
+                var cep by remember { mutableStateOf("") }
                 var endereco by remember { mutableStateOf("") }
                 var raio by remember { mutableStateOf("5") }
+                val scope = rememberCoroutineScope()
+                val context = LocalContext.current
                 val locaisSalvos by viewModel.savedLocations.collectAsState()
 
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Adicione locais como Casa ou Trabalho para monitorar raios de busca.", fontSize = 12.sp, color = Color.Gray)
-
                     OutlinedTextField(
                         value = apelido,
                         onValueChange = { apelido = it },
                         label = { Text("Apelido (ex: Casa)") },
                         modifier = Modifier.fillMaxWidth()
                     )
+
+                    // LINHA COM CEP E BOTÃO DE BUSCAR
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedTextField(
+                            value = cep,
+                            onValueChange = { cep = it },
+                            label = { Text("CEP (Apenas números)") },
+                            modifier = Modifier.weight(1f)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(onClick = {
+                            if (cep.length == 8) {
+                                scope.launch {
+                                    try {
+                                        val resp = com.example.promomap.util.ViaCepClient.api.buscarCep(cep)
+                                        endereco = "${resp.logradouro}, ${resp.bairro}, ${resp.localidade} - ${resp.uf}"
+                                    } catch (e: Exception) { /* Erro ao buscar CEP */ }
+                                }
+                            }
+                        }) { Text("Buscar CEP") }
+                    }
+
                     OutlinedTextField(
                         value = endereco,
                         onValueChange = { endereco = it },
-                        label = { Text("Endereço Completo") },
+                        label = { Text("Endereço Completo (Adicione o número)") },
                         modifier = Modifier.fillMaxWidth()
                     )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                         OutlinedTextField(
                             value = raio,
                             onValueChange = { raio = it },
                             label = { Text("Raio (km)") },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.width(100.dp)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+
+                        // BOTÃO SALVAR (AGORA COM COORDENADAS)
                         Button(
                             onClick = {
                                 if (apelido.isNotBlank() && endereco.isNotBlank()) {
-                                    viewModel.saveNewLocation(apelido, endereco, raio)
-                                    apelido = ""; endereco = ""; raio = "5"
+                                    scope.launch {
+                                        // Converte o endereço digitado em Coordenadas!
+                                        val coords = com.example.promomap.util.LocationUtils.obterCoordenadasPorEndereco(context, endereco)
+                                        if (coords != null) {
+                                            viewModel.saveNewLocation(apelido, endereco, raio, coords.latitude, coords.longitude)
+                                            apelido = ""; cep = ""; endereco = ""; raio = "5"
+                                        }
+                                    }
                                 }
                             },
-                            modifier = Modifier.height(56.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = themeColor)
                         ) {
-                            Icon(Icons.Default.Add, contentDescription = null)
+                            Icon(Icons.Default.Add, null)
                             Text(" Salvar")
                         }
                     }
 
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
+                    // Exibe a lista real do Firebase
                     locaisSalvos.forEach { loc ->
                         SavedLocationItem(
                             label = loc["name"] ?: "",
                             address = loc["address"] ?: "",
                             radius = loc["radius"] ?: "5",
-                            onDeleteClick = { viewModel.removeSavedLocation(loc) } // <-- Lógica de excluir
+                            onDeleteClick = { viewModel.removeSavedLocation(loc) }
                         )
                     }
                 }

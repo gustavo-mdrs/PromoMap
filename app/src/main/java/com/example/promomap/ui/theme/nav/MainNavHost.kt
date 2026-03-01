@@ -135,7 +135,7 @@ fun MainNavHost(
                 onImageClick = {
                     // Futuro: Abrir galeria
                 },
-                onSaveClick = { local, produto, marca, preco ->
+                onSaveClick = { local, produto, marca, preco, latLng ->
                     val novaPromo = Promo(
                         item = "$produto - $local",
                         marca = marca,
@@ -143,7 +143,6 @@ fun MainNavHost(
                         localizacao = LatLng(-8.05, -34.90),
                         status = "Ativa"
                     )
-
                     viewModel.addPromo(novaPromo)
                     viewModel.page = Route.Map
                 }

@@ -27,21 +27,29 @@ import androidx.compose.runtime.collectAsState
 fun MapPage(
     viewModel: MainViewModel
 ) {
-    // Configurações iniciais do Mapa
-    val recife = LatLng(-8.05, -34.90)
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(recife, 12f)
-    }
+    val context = LocalContext.current
     val promoList by viewModel.promos.collectAsState()
 
-    val context = LocalContext.current
     val hasLocationPermission by remember {
         mutableStateOf(
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
         )
+    }
+
+    // 1. Inicia em Recife apenas como um plano B (fallback)
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(LatLng(-8.05, -34.90), 12f)
+    }
+
+    // 2. A MÁGICA: Assim que tiver permissão, puxa o GPS e move a câmera para o usuário!
+    LaunchedEffect(hasLocationPermission) {
+        if (hasLocationPermission) {
+            val userLocation = com.example.promomap.util.LocationUtils.obterLocalizacaoAtual(context)
+            if (userLocation != null) {
+                // Move a câmera suavemente para a posição do usuário com zoom de 15x (mais perto)
+                cameraPositionState.position = CameraPosition.fromLatLngZoom(userLocation, 15f)
+            }
+        }
     }
 
     // Estado para controlar qual promoção foi clicada
@@ -60,7 +68,7 @@ fun MapPage(
                 properties = MapProperties(isMyLocationEnabled = hasLocationPermission),
                 uiSettings = MapUiSettings(
                     myLocationButtonEnabled = true,
-                    zoomControlsEnabled = false
+                    zoomControlsEnabled = true
                 ),
                 onMapClick = { selectedPromo = null } // Clicar fora fecha o detalhe
             ) {
