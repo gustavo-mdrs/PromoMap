@@ -44,7 +44,7 @@ fun MapPage(
     // 2. A MÁGICA: Assim que tiver permissão, puxa o GPS e move a câmera para o usuário!
     LaunchedEffect(hasLocationPermission) {
         if (hasLocationPermission) {
-            val userLocation = com.example.promomap.util.LocationUtils.obterLocalizacaoAtual(context)
+            val userLocation = com.example.promomap.util.LocationUtils.obterLocalizacaoPrecisa(context)
             if (userLocation != null) {
                 // Move a câmera suavemente para a posição do usuário com zoom de 15x (mais perto)
                 cameraPositionState.position = CameraPosition.fromLatLngZoom(userLocation, 15f)

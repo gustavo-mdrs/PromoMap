@@ -53,16 +53,17 @@ object LocationUtils {
         }
     }
 
-    // Pega a localização GPS atual de forma segura e leve
+    // Pega a localização GPS forçando a antena a buscar o local exato agora
     @SuppressLint("MissingPermission")
-    suspend fun obterLocalizacaoAtual(context: Context): LatLng? {
+    suspend fun obterLocalizacaoPrecisa(context: Context): LatLng? {
+        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
         return try {
-            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-            val location = fusedLocationClient.lastLocation.await() // Versão segura
+            val location = fusedLocationClient.getCurrentLocation(
+                com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY,
+                null
+            ).await()
 
             if (location != null) LatLng(location.latitude, location.longitude) else null
-        } catch (e: Exception) {
-            null
-        }
+        } catch (e: Exception) { null }
     }
 }

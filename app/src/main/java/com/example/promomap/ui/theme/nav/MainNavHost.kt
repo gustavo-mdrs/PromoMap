@@ -140,7 +140,7 @@ fun MainNavHost(
                         item = "$produto - $local",
                         marca = marca,
                         preco = preco,
-                        localizacao = LatLng(-8.05, -34.90),
+                        localizacao = latLng,
                         status = "Ativa"
                     )
                     viewModel.addPromo(novaPromo)
