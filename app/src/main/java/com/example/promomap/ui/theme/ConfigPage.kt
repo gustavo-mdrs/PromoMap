@@ -1,5 +1,7 @@
 package com.example.promomap.ui.theme
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -164,13 +166,43 @@ fun ConfigPage(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Button(onClick = {
-                            if (cep.length == 8) {
+                            // 1. Limpa o texto: tira traços e espaços que o usuário possa ter digitado
+                            val cepLimpo = cep.replace("-", "").replace(" ", "").trim()
+
+                            // 2. Espião 1: Avisa no Logcat que o botão foi clicado
+                            Log.d("ViaCEP", "Botão clicado! CEP limpo: '$cepLimpo' (Tamanho: ${cepLimpo.length})")
+
+                            if (cepLimpo.length == 8) {
                                 scope.launch {
                                     try {
-                                        val resp = com.example.promomap.util.ViaCepClient.api.buscarCep(cep)
-                                        endereco = "${resp.logradouro}, ${resp.bairro}, ${resp.localidade} - ${resp.uf}"
-                                    } catch (e: Exception) { /* Erro ao buscar CEP */ }
+                                        Log.d("ViaCEP", "Iniciando requisição para a internet...")
+
+                                        // Usa o CEP limpo para buscar
+                                        val resp = com.example.promomap.util.ViaCepClient.api.buscarCep(cepLimpo)
+
+                                        Log.d("ViaCEP", "Resposta recebida do servidor: $resp")
+
+                                        if (resp.logradouro != null) {
+                                            endereco = "${resp.logradouro}, ${resp.bairro}, ${resp.localidade} - ${resp.uf}"
+                                        } else {
+                                            endereco = ""
+                                            android.widget.Toast.makeText(context, "CEP não encontrado ou inválido.", android.widget.Toast.LENGTH_SHORT).show()
+                                        }
+
+                                    } catch (e: java.io.IOException) {
+                                        // 3. Espião 2: Faz o Logcat GRITAR o erro em vermelho
+                                        Log.e("ViaCEP", "Erro de Rede (Sem internet ou Servidor fora):", e)
+                                        android.widget.Toast.makeText(context, "Sem internet. Verifique sua conexão.", android.widget.Toast.LENGTH_SHORT).show()
+
+                                    } catch (e: Exception) {
+                                        // Espião 3: Erros genéricos de código
+                                        Log.e("ViaCEP", "Erro inesperado:", e)
+                                        android.widget.Toast.makeText(context, "Erro inesperado ao processar o CEP.", Toast.LENGTH_SHORT).show()
+                                    }
                                 }
+                            } else {
+                                Log.w("ViaCEP", "Clique ignorado. Tamanho do CEP estava errado.")
+                                android.widget.Toast.makeText(context, "O CEP deve ter 8 números", android.widget.Toast.LENGTH_SHORT).show()
                             }
                         }) { Text("Buscar CEP") }
                     }
