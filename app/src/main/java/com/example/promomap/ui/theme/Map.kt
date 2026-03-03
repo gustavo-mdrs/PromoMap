@@ -100,7 +100,7 @@ fun MapPage(
                         price = selectedPromo!!.preco,
                         marca = selectedPromo!!.marca,
                         local = "Local da Promoção",
-                        imageUrl = null, // Passe selectedPromo!!.imageUrl se tiver
+                        imageUrl = selectedPromo!!.imageUrl,
                         onReportClick = {
                             viewModel.removePromo(selectedPromo!!)
                             selectedPromo = null

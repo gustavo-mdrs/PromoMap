@@ -8,5 +8,6 @@ data class Promo(
     val marca: String,
     val preco: Double,
     val localizacao: LatLng? = null,
-    val status: String = "Ativa"
+    val status: String = "Ativa",
+    val imageUrl: String = ""
 )

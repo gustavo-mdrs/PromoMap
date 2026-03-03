@@ -44,7 +44,7 @@ import java.util.Locale
 fun CadPromoPage(
     onBackClick: () -> Unit,
     onImageClick: () -> Unit,
-    onSaveClick: (String, String, String, Double, LatLng) -> Unit // <- Agora exige o LatLng
+    onSaveClick: (String, String, String, Double, LatLng, String) -> Unit
 ) {
     var localName by remember { mutableStateOf("") }
     var produto by remember { mutableStateOf("") }
@@ -55,6 +55,15 @@ fun CadPromoPage(
     val scope = rememberCoroutineScope()
     var promoLocation by remember { mutableStateOf<LatLng?>(null) }
     var isFetchingLocation by remember { mutableStateOf(false) }
+
+    var imageUri by remember { mutableStateOf<android.net.Uri?>(null) }
+
+    // Ferramenta nativa para abrir a galeria
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: android.net.Uri? ->
+        imageUri = uri
+    }
 
     // Ferramenta nativa do Android para buscar o GPS
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
@@ -186,6 +195,7 @@ fun CadPromoPage(
             // Botão Adicionar Imagem (Placeholder)
             Text(text = "Foto do Produto", modifier = Modifier.align(Alignment.Start), fontWeight = FontWeight.SemiBold, color = Color.Gray)
             Spacer(modifier = Modifier.height(8.dp))
+            // Área da Foto
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -193,16 +203,22 @@ fun CadPromoPage(
                     .clip(RoundedCornerShape(12.dp))
                     .background(Color(0xFFF1F8E9))
                     .border(2.dp, Color(0xFF80CBC4), RoundedCornerShape(12.dp))
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = ripple(),
-                        onClick = { onImageClick() }
-                    ),
+                    .clickable { galleryLauncher.launch("image/*") }, // <- Abre a galeria!
                 contentAlignment = Alignment.Center
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Default.Add, contentDescription = "Adicionar", tint = Color(0xFF1B5E20), modifier = Modifier.size(48.dp))
-                    Text("Adicionar Imagem", color = Color(0xFF1B5E20), fontWeight = FontWeight.Medium)
+                if (imageUri != null) {
+                    // Mostra a foto escolhida usando o Coil
+                    coil.compose.AsyncImage(
+                        model = imageUri,
+                        contentDescription = "Imagem selecionada",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                    )
+                } else {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.Add, contentDescription = "Adicionar", tint = Color(0xFF1B5E20), modifier = Modifier.size(48.dp))
+                        Text("Adicionar Imagem", color = Color(0xFF1B5E20), fontWeight = FontWeight.Medium)
+                    }
                 }
             }
 
@@ -221,7 +237,7 @@ fun CadPromoPage(
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                // BOTÃO CADASTRAR COM A LÓGICA DE VALIDAÇÃO
+                // BOTÃO CADASTRAR COM A LÓGICA DE VALIDAÇÃO E UPLOAD
                 Button(
                     onClick = {
                         val precoDouble = preco.replace(",", ".").toDoubleOrNull() ?: 0.0
@@ -246,8 +262,19 @@ fun CadPromoPage(
 
                             // Verifica se conseguiu a coordenada (seja por GPS ou Geocoder)
                             if (finalLocation != null) {
-                                // Deu certo! Manda salvar (o MainNavHost que mudará a tela para o Mapa)
-                                onSaveClick(localName, produto, marca, precoDouble, finalLocation)
+
+                                // --- INÍCIO DA LÓGICA DE IMAGEM ---
+                                Toast.makeText(context, "Salvando promoção, aguarde...", Toast.LENGTH_SHORT).show()
+
+                                var imageUrlToSave = ""
+                                if (imageUri != null) {
+                                    // Chama o seu CloudinaryClient para subir a foto
+                                    imageUrlToSave = com.example.promomap.util.CloudinaryClient.uploadImage(context, imageUri!!) ?: ""
+                                }
+                                // --- FIM DA LÓGICA DE IMAGEM ---
+
+                                // Manda salvar passando o novo parâmetro imageUrlToSave no final!
+                                onSaveClick(localName, produto, marca, precoDouble, finalLocation, imageUrlToSave)
                             } else {
                                 // DEU ERRO! Avisa o usuário na tela atual e NÃO SAI DA TELA.
                                 Toast.makeText(
@@ -272,5 +299,5 @@ fun CadPromoPage(
 @Preview
 @Composable
 fun CadPromoPagePreview() {
-    CadPromoPage(onBackClick = {}, onImageClick = {}, onSaveClick = { _, _, _, _, _ -> })
+    CadPromoPage(onBackClick = {}, onImageClick = {}, onSaveClick = { _, _, _, _, _, _ -> })
 }

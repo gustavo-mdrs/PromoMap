@@ -133,15 +133,16 @@ fun MainNavHost(
             CadPromoPage(
                 onBackClick = { viewModel.page = Route.Home },
                 onImageClick = {
-                    // Futuro: Abrir galeria
+                    // Galeria já está sendo aberta por dentro da tela agora
                 },
-                onSaveClick = { local, produto, marca, preco, latLng ->
+                onSaveClick = { local, produto, marca, preco, latLng, urlImagem ->
                     val novaPromo = Promo(
                         item = "$produto - $local",
                         marca = marca,
                         preco = preco,
                         localizacao = latLng,
-                        status = "Ativa"
+                        status = "Ativa",
+                        imageUrl = urlImagem
                     )
                     viewModel.addPromo(novaPromo)
                     viewModel.page = Route.Map

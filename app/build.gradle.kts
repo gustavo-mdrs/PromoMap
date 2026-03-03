@@ -49,6 +49,9 @@ dependencies {
     //Serializable
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 
+    // Biblioteca para carregar imagens a partir de URLs ou do telemóvel
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
     implementation("com.google.firebase:firebase-auth-ktx")

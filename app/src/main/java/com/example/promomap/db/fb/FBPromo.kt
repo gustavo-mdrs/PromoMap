@@ -11,6 +11,7 @@ class FBPromo {
     var lat: Double? = null
     var lng: Double? = null
     var status: String? = "Ativa"
+    var imageUrl: String? = null
 
     // Converte de FBPromo (Firebase) para Promo (Model) [cite: 889]
     fun toPromo(): Promo {
@@ -21,7 +22,8 @@ class FBPromo {
             marca = marca!!,
             preco = preco!!,
             localizacao = latlng,
-            status = status ?: "Ativa"
+            status = status ?: "Ativa",
+            imageUrl = imageUrl ?: ""
         )
     }
 }
@@ -36,5 +38,6 @@ fun Promo.toFBPromo(): FBPromo {
     fbPromo.lat = this.localizacao?.latitude
     fbPromo.lng = this.localizacao?.longitude
     fbPromo.status = this.status
+    fbPromo.imageUrl = this.imageUrl
     return fbPromo
 }
