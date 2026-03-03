@@ -72,29 +72,66 @@ fun ConfigPage(
                 isExpanded = expandedSection == "notif",
                 onExpandClick = { expandedSection = if (expandedSection == "notif") null else "notif" }
             ) {
+                // Estados locais para os botões não ficarem travados visualmente
+                var notifLocalAtual by remember { mutableStateOf(true) }
+                var notifLocaisSalvos by remember { mutableStateOf(true) }
+                var notifFav by remember { mutableStateOf(true) }
+                var notifAltaDensidade by remember { mutableStateOf(true) }
+                var notifFinalizada by remember { mutableStateOf(true) }
+
+                //GPS ATUAL
                 ConfigSwitchItem(
-                    title = "Promoções próximas",
-                    subtitle = "Notificar ofertas próximas a locais de interesse",
-                    isChecked = true,
-                    onToggle = { viewModel.toggleNotification("promo_proxima", it) }
+                    title = "Perto de mim (GPS)",
+                    subtitle = "Alertar ofertas próximas à sua localização atual",
+                    isChecked = notifLocalAtual,
+                    onToggle = {
+                        notifLocalAtual = it
+                        viewModel.toggleNotification("promo_local_atual", it)
+                    }
                 )
+
+                // 2. LOCAIS SALVOS
+                ConfigSwitchItem(
+                    title = "Meus locais salvos",
+                    subtitle = "Notificar ofertas próximas a locais de interesse",
+                    isChecked = notifLocaisSalvos,
+                    onToggle = {
+                        notifLocaisSalvos = it
+                        viewModel.toggleNotification("promo_proxima", it)
+                    }
+                )
+
+                // 3. FAVORITOS
                 ConfigSwitchItem(
                     title = "Produtos de interesse",
                     subtitle = "Alertar sobre baixas de preço em favoritos",
-                    isChecked = true,
-                    onToggle = { viewModel.toggleNotification("produto_fav", it) }
+                    isChecked = notifFav,
+                    onToggle = {
+                        notifFav = it
+                        viewModel.toggleNotification("produto_fav", it)
+                    }
                 )
+
+                // 4. ALTA DENSIDADE
                 ConfigSwitchItem(
                     title = "Alta densidade",
                     subtitle = "Notificar locais com muitos anúncios",
-                    isChecked = true,
-                    onToggle = { viewModel.toggleNotification("alta_densidade", it) }
+                    isChecked = notifAltaDensidade,
+                    onToggle = {
+                        notifAltaDensidade = it
+                        viewModel.toggleNotification("alta_densidade", it)
+                    }
                 )
+
+                // 5. FINALIZADAS
                 ConfigSwitchItem(
                     title = "Finalizadas",
-                    subtitle = "Alertar promoções encerradas perto de locais de interesse",
-                    isChecked = true,
-                    onToggle = { viewModel.toggleNotification("finalizada", it) }
+                    subtitle = "Alertar promoções encerradas",
+                    isChecked = notifFinalizada,
+                    onToggle = {
+                        notifFinalizada = it
+                        viewModel.toggleNotification("finalizada", it)
+                    }
                 )
             }
 

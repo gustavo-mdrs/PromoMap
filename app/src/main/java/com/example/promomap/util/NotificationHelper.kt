@@ -33,6 +33,11 @@ object NotificationHelper {
             .setAutoCancel(true)
 
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(1, builder.build())
+
+        // GERA UM ID ÚNICO E ALEATÓRIO PARA CADA NOTIFICAÇÃO
+        val notificationId = kotlin.random.Random.nextInt()
+
+        // USA O NOVO ID AQUI
+        notificationManager.notify(notificationId, builder.build())
     }
 }
